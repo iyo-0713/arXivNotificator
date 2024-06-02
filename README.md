@@ -4,7 +4,7 @@
 
 なお推薦は、arXivから取得した論文からOpenAI APIを用いて埋め込み表現を取得し、notionに記録された論文とどの程度類似しているかに準じています。
 
-詳細は以下のブログを参考にしてください。
+Notionとの具体的な連携の仕方などは以下のブログを参考にしてください。
 
 ## Directory Structure
 ```
@@ -13,7 +13,6 @@ arXivNotificator/
 │   ├── log/
 │   └── initial_data.json
 ├── src/
-│   ├── __pycache__/
 │   ├── arxiv_api.py
 │   ├── main.py
 │   ├── notion_api.py
@@ -21,6 +20,7 @@ arXivNotificator/
 │   ├── slack_api.py
 │   └── utils.py
 ├── .env
+├── .gitignore
 ├── config.json
 ├── crontab
 ├── Dockerfile
@@ -95,5 +95,4 @@ Docker containerのrun:
 ## Contact
 
 何かありましたら以下のアドレスまでご連絡ください
-
     h.yasukawa.0713☆gmail.com（☆を@に変える）
