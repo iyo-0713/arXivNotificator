@@ -1,0 +1,6 @@
+scikit-learn
+python-dotenv
+feedparser
+requests
+openai
+slack_sdk

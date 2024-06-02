@@ -1,0 +1,11 @@
+{
+"keywords": ["machine learning", "ML", "transformer", "language model", "natural language processing", "nlp", "llm", "dialogue system"],
+"slack_channel": "paper-notification",
+"add_to_notion": true,
+"arxiv_to_notion": 1,
+"arxiv_to_slack": 3,
+"notion_title": "名前",
+"notion_url": "URL",
+"initial_data_path": "/app/data/initial_data.json"
+}
+
