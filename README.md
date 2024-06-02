@@ -1,4 +1,4 @@
-# arXivNotifier
+# arXivNotificator
 
 本プロジェクトではarXivから毎日情報を取得し、ユーザの好みに合わせた論文の推薦をSlackとNotionをUIとして行います。
 
