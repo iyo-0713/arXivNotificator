@@ -26,7 +26,7 @@ def arxiv2notion(paper_to_notion):
     """
     arxivから獲得したデータをnotion用のデータ構造に変換する
     """
-    title = paper_to_notion["title"] + "(PaperPal)"
+    title = paper_to_notion["title"] + " (arXivNotificator)"
     link = paper_to_notion["link"]
 
     add_arxiv_to_notion(title, link)
@@ -50,7 +50,7 @@ def apply_function_to_links(data_list, function):
 
 if __name__ == "__main__":
     # Notionデータからのデータ取得、knowledgeの更新、埋め込みベクトルの作成、保存、論文の推薦を行う
-    test_mode = True
+    test_mode = False
     if test_mode:
         post_to_slack(message="論文の探索中です", channel=load_config().get('slack_channel', None))
 
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     """
 
     # 適合するNotionデータベースを持っていない場合はinitial_data_pathとしてjsonファイルを渡すことも可能
-    initial_data_path = load_config().get('initial_data_path', None)
+    initial_data_path = load_config().get('initial_data_path', "None")
     if file_exists(initial_data_path):
         """データ構造
         [{"title": title, "link": link}]
@@ -96,7 +96,7 @@ if __name__ == "__main__":
                     knowledge_data.append( 
                         {
                             "text":{"title": _title, "summary": None}, 
-                            "embedding":{"title": get_text_embedding(client, _title, model), "summary": get_text_embedding(client, _summary, model)}, 
+                            "embedding":{"title": get_text_embedding(client, _title, model), "summary": None}, 
                             "id": _id,
                         }
                     )
@@ -107,7 +107,7 @@ if __name__ == "__main__":
                     knowledge_data.append( 
                         {
                             "text":{"title": _title, "summary": _summary}, 
-                            "embedding":{"title": get_text_embedding(client, _title, model), "summary": get_text_embedding(client, _summary, model)}, 
+                            "embedding":{"title": get_text_embedding(client, _title, model), "summary": None}, 
                             "id": _id,
                         }
                     )
@@ -142,7 +142,7 @@ if __name__ == "__main__":
                 knowledge_data.append( 
                     {
                         "text":{"title": _title, "summary": _summary}, 
-                        "embedding":{"title": get_text_embedding(client, _title, model), "summary": get_text_embedding(client, _summary, model)}, 
+                        "embedding":{"title": get_text_embedding(client, _title, model), "summary": None}, 
                         "id": _id,
                     }
                 )
@@ -152,7 +152,7 @@ if __name__ == "__main__":
     # Knowledgeに基づく論文の推薦
 
     # 前日に公開されたarxiv論文の取得
-    yesterday = datetime.now() - timedelta(days=1)
+    yesterday = datetime.now() - timedelta(days=3)
     count = get_arxiv_paper_count(yesterday)
     print(f"Number of papers published yesterday: {count}")
     keywords = load_config().get('keywords', []) # フィルタリングに使用するキーワード
@@ -186,15 +186,7 @@ if __name__ == "__main__":
         title_distances = []
         for sim in title_similarities:
             title_distances.append(sum(sim) / len(sim))
-        summary_similarities = cosine_similarity(
-            [item["embedding"]["summary"] for item in arxiv_data],
-            [item["embedding"]["summary"] for item in knowledge_data]
-            )
-        summary_distances = []
-        for sim in summary_similarities:
-            summary_distances.append(sum(sim) / len(sim))
-
-        distances = [(x+y)/2 for x, y in zip(title_distances, summary_distances)]
+        distances = title_distances
         # 上位いくつの論文を取得するか
         sorted_indices = sorted(range(len(distances)), key=lambda i: distances[i], reverse=True)
         # Notionに論文を記録する
