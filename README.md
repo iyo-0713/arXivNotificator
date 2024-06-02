@@ -30,7 +30,7 @@ arXivNotificator/
 
 ## Installation
 ### 1. **本リポジトリのClone:**
-    bash
+
     git clone https://github.com/iyo-0713/arXivNotificator.git
     cd arXivNotifier
 
@@ -48,8 +48,8 @@ arXivNotificator/
 - SLACK_BOT_TOKEN：通知を行うslack workspaceのUser OAuth token。slackへのメッセージ送信の認証に使われます
 - NOTION_INTEGRATION_TOKEN：結果を記録するNotionのインテグレーションのtoken。Notionのworkspaceへのアクセスの認証に使われます
 - NOTION_DATABASE_ID： 論文などの管理を行っているデータビューのID
-- TEMPLATE_PAGE_ID (optional)：論文の管理を行っているデータビューのテンプレートのID
-- OPENAI_API_KEY: OpenAIのAPIにアクセスするためAPI Key。OpenAIサービスとのやり取りのために使われます
+- TEMPLATE_PAGE_ID (optional)：論文などの管理を行っているデータビューのテンプレートのID
+- OPENAI_API_KEY: OpenAIのAPIにアクセスするためのAPI Key。OpenAIサービスとのやり取りのために使われます
 
 
 ### 3. **config.jsonの設定:**
@@ -59,10 +59,10 @@ arXivNotificator/
 - slack_channel：通知を行うslackのチャンネル名
 - add_to_notion：True/False。Notionとの連携ができない場合はFalseにしてください
 - arxiv_to_notion：Notionに記録する論文の数
-- arxiv_to_slack：Arxivに通知する論文の数
+- arxiv_to_slack：Slackに通知する論文の数
 - notion_title：Notionのデータビューにおいて、論文のタイトルを入れる項目名
 - notion_url：Notionのデータビューにおいて、論文のリンクを入れる項目名
-- initial_data_path：Notionのデータベースがない場合に利用するjsonファイルのパス。既存のNotionデータベースがない場合に用いてください
+- initial_data_path：Notionのデータベースがない場合に利用するjsonファイルのパス。既存のNotionデータベースがない場合に、これまで読んだ論文のタイトルとリンクを配置したjsonファイルを作成し、参照してください
 
 ### 4. **crontabの設定(optional):**
 
