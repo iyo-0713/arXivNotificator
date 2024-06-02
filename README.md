@@ -40,7 +40,7 @@ arXivNotifier/
     TEMPLATE_PAGE_ID=your_notion_template_id (optional)
     OPENAI_API_key=your_openai_api_token
     ```
-    
+    ```
     **Environment Variables**
     SLACK_BOT_TOKEN：通知を行うslack workspaceのUser OAuth token。slackへのメッセージ送信の認証に使われます
     NOTION_INTEGRATION_TOKEN：結果を記録するNotionのインテグレーションのtoken。Notionのworkspaceへのアクセスの認証に使われます
