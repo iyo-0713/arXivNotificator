@@ -24,20 +24,12 @@ arXivNotifier/
 ```
 
 ## Installation
-```
-
-1. **Clone the repository:**
+### 1. **RepositoryのClone:**
     ```bash
-    git clone https://github.com/YOUR_USERNAME/arXivNotifier.git
+    git clone https://github.com/iyo-0713/arXivNotificator.git
     cd arXivNotifier
     ```
-
-2. **Install the dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-3. **Set up the environment variables:**
+### 2. **.envファイルの作成:**
     - Create a `.env` file in the root directory and add the necessary environment variables as shown below:
     ```env
     SLACK_BOT_TOKEN==your_slack_bot_token
@@ -45,7 +37,20 @@ arXivNotifier/
     NOTION_DATABASE_ID=your_notion_database_id
     TEMPLATE_PAGE_ID=your_notion_template_id
     OPENAI_API_key=your_openai_api_token
+
+### 3. **Build and run the Docker container:**
+
+    
+### 4. **Build and run the Docker container:**
+    Build the Docker image:
+    ```bash
+    docker build -t arxivnotifier .
     ```
+    Run the Docker container:
+    ```bash
+    docker run -d --name arxivnotifier arxivnotifier
+    ```
+
 
 ### Configuration
 
