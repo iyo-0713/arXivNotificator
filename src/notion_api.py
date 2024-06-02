@@ -1,103 +1,207 @@
 #!/usr/bin/env python3
-import requests
-import os
+
+# 必要なライブラリのインポート
 import json
+from datetime import datetime, timedelta
+from sklearn.metrics.pairwise import cosine_similarity
+import os
+import sys
+import time
 from dotenv import load_dotenv
-from utils import load_config
 load_dotenv('/app/.env')
 
-# Notionに関する設定
-NOTION_API_TOKEN = os.environ["NOTION_INTEGRATION_TOKEN"]
-DATABASE_ID = os.environ["NOTION_DATABASE_ID"]
-try:
-    TEMPLATE_PAGE_ID = os.environ["TEMPLATE_PAGE_ID"]
-except KeyError:
-    TEMPLATE_PAGE_ID = None
+# スクリプトのディレクトリを取得
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# srcディレクトリをPythonパスに追加
+sys.path.append(current_dir)
 
-headers = {
-    "Authorization": f"Bearer {NOTION_API_TOKEN}",
-    "Content-Type": "application/json",
-    "Notion-Version": "2022-06-28"
-}
-notion_url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
 
-def get_notion_data(url, headers):
+from utils import file_exists, save_to_json, load_from_json, load_config
+from notion_api import get_notion_data, extract_notion_data, notion_url, headers, add_arxiv_to_notion
+from openai_api import get_text_embedding, client, model
+from arxiv_api import get_arxiv_paper_count, get_arxiv_papers, get_yesterdays_arxiv_paper_count, arxiv_link_to_id, get_arxiv_paper_info_by_id
+from slack_api import post_to_slack, PAPER_NOTIFICATION_TEMPLETE
+
+def arxiv2notion(paper_to_notion):
     """
-    Notion APIからデータベース情報を取得する。
+    arxivから獲得したデータをnotion用のデータ構造に変換する
     """
-    try:
-        response = requests.post(url, headers=headers)
-        response.raise_for_status()
-        return response.json()
-    except requests.RequestException as e:
-        assert False, f"Failed to retrieve database: {e}"
+    title = paper_to_notion["title"] + " (arXivNotificator)"
+    link = paper_to_notion["link"]
 
-def extract_notion_data(data):
+    add_arxiv_to_notion(title, link)
+
+def arxiv2slack(paper_to_slack, distance):
+    title = paper_to_slack["title"].replace("\n", " ")
+    summary = paper_to_slack["summary"].replace("\n", " ")
+    link = paper_to_slack["link"]
+    id = arxiv_link_to_id(link)
+    message = PAPER_NOTIFICATION_TEMPLETE.format(title=title, summary=summary, distance=distance, id=id, link=link)
+    slack_channel = load_config().get('slack_channel', None)
+    post_to_slack(message, slack_channel)
+
+def apply_function_to_links(data_list, function):
+    results = []
+    for item in data_list:
+        if 'link' in item and item['link']:
+            result = function(item['link'])
+            results.append(result)
+    return results
+
+if __name__ == "__main__":
+    # Notionデータからのデータ取得、knowledgeの更新、埋め込みベクトルの作成、保存、論文の推薦を行う
+    test_mode = False
+    if test_mode:
+        post_to_slack(message="論文の探索中です", channel=load_config().get('slack_channel', None))
+
+    knowledge_path = "/app/data/knowledge.json"
+
+    # 既存のNotionからデータの取得
+    """データ構造
+    {"title": title, "link": link, "classification": classification}
     """
-    Notionデータをクリーンアップし、必要な情報を抽出する。
-    """
-    if not data:
-        return []
-    cleaned_data = []
-    # タイトル及びリンクのカラム名
-    # デフォルトではNotionのデフォルト値を使用
-    title_key = load_config().get('notion_title', "名前")
-    link_key = load_config().get('notion_url', "URL")
-    for result in data["results"]:
-        title = result["properties"][title_key]["title"][0]["plain_text"]
-        link = result["properties"][link_key]["url"]
-        cleaned_data.append({"title": title, "link": link})
-    return cleaned_data
 
-# できればテンプレートの指定があるかどうかで考える
-def load_template_data():
-    # テンプレートページの内容を取得
-    template_url = f"https://api.notion.com/v1/blocks/{TEMPLATE_PAGE_ID}/children"
-    try:
-        template_response = requests.get(template_url, headers=headers)
-        template_response.raise_for_status()  # HTTPエラーが発生した場合に例外を発生させる
-        template_content = template_response.json()
-        template_blocks = template_content.get('results', None)
-        return template_blocks
-    except requests.exceptions.RequestException as e:
-        print(f"Error fetching template data: {e}")
-        return None
-    
-def add_to_notion(page_data):
-    template_blocks = load_template_data()
+    # 適合するNotionデータベースを持っていない場合はinitial_data_pathとしてjsonファイルを渡すことも可能
+    initial_data_path = load_config().get('initial_data_path', "None")
+    if file_exists(initial_data_path):
+        """データ構造
+        [{"title": title, "link": link}]
+        """
+        notion_data = load_from_json(initial_data_path)
+        if load_config().get('add_to_notion', True):
+            for idx in range(len(notion_data)):
+                paper_to_notion = notion_data[idx]
+                arxiv2notion(paper_to_notion)
+    else:
+        _notion_data = get_notion_data(notion_url, headers)
+        notion_data = extract_notion_data(_notion_data)
 
-    # ページを作成
-    page_response = requests.post("https://api.notion.com/v1/pages", headers=headers, data=json.dumps(page_data))
-    page = page_response.json()
-    page_id = page['id']
-
-    if template_blocks is not None:
-        # テンプレート内容を新しいページに追加
-        block_url = f"https://api.notion.com/v1/blocks/{page_id}/children"
-        block_data = {
-            "children": template_blocks
-        }
-
-        block_response = requests.patch(block_url, headers=headers, data=json.dumps(block_data))
-
-def add_arxiv_to_notion(title, link):
-    title_key = load_config().get('notion_title', "名前")
-    link_key = load_config().get('notion_url', "URL")
-    page_data = {
-        "parent": {"database_id": DATABASE_ID},
-        "properties": {
-            f"{title_key}": {
-                f"title": [
-                    {
-                        "text": {
-                            "content": title
+    # NotionとKnowledgeの同期
+    if file_exists(knowledge_path):
+        # 既存のKnowledgeデータの取得
+        """データ構造
+        [{"text":{"title": title, "summary": summary}, "embedding":{"title": title, "summary": summary}, "id": id}]
+        """
+        knowledge_data = load_from_json(knowledge_path)
+        # titleの突合とknowledgeへの追加
+        count = 0
+        for _notion_data in notion_data:
+            if not any(_knowledge_data["text"]["title"] == _notion_data["title"] for _knowledge_data in knowledge_data):
+                _title = _notion_data["title"]
+                _id = arxiv_link_to_id(_notion_data["link"])
+                count += 1
+                print(f"Append {_title} into knowledge")
+                if _id is None:
+                    # arxivの論文ではなかった場合
+                    knowledge_data.append( 
+                        {
+                            "text":{"title": _title, "summary": None}, 
+                            "embedding":{"title": get_text_embedding(client, _title, model), "summary": None}, 
+                            "id": _id,
                         }
+                    )
+                else:
+                    # arxivの論文だった場合
+                    _summary = get_arxiv_paper_info_by_id(_id)[0]["summary"]
+
+                    knowledge_data.append( 
+                        {
+                            "text":{"title": _title, "summary": _summary}, 
+                            "embedding":{"title": get_text_embedding(client, _title, model), "summary": None}, 
+                            "id": _id,
+                        }
+                    )
+        # Notionにないデータをknowledgeから削除する
+        notion_titles = {entry['title'] for entry in notion_data}
+        knowledge_data = [entry for entry in knowledge_data if entry["text"]['title'] in notion_titles]
+        print(f"Appended {count} data into knowledge")
+        save_to_json(knowledge_data, knowledge_path)
+    else:
+        # knowledgeからない場合の初期設定
+        if test_mode:
+            notion_data = notion_data[:10]
+        knowledge_data = []
+        count = 0
+        for _notion_data in notion_data:
+            _title = _notion_data["title"]
+            _id = arxiv_link_to_id(_notion_data["link"])
+            count += 1
+            print(f"Append {_title} into knowledge")
+            if _id is None:
+                # arxivの論文ではなかった場合
+                knowledge_data.append( 
+                    {
+                        "text":{"title": _title, "summary": None}, 
+                        "embedding":{"title": get_text_embedding(client, _title, model), "summary": None}, 
+                        "id": _id,
                     }
-                ]
-            },
-            f"{link_key}": {
-                "url": link
-            },
-        }
-    }
-    add_to_notion(page_data)
+                )
+            else:
+                # arxivの論文だった場合
+                _summary = get_arxiv_paper_info_by_id(_id)[0]["summary"]
+                knowledge_data.append( 
+                    {
+                        "text":{"title": _title, "summary": _summary}, 
+                        "embedding":{"title": get_text_embedding(client, _title, model), "summary": None}, 
+                        "id": _id,
+                    }
+                )
+        print(f"Appended {count} data into knowledge")
+        save_to_json(knowledge_data, knowledge_path)
+    
+    # Knowledgeに基づく論文の推薦
+
+    # 前日に公開されたarxiv論文の取得
+    yesterday = datetime.now() - timedelta(days=3)
+    count = get_arxiv_paper_count(yesterday)
+    print(f"Number of papers published yesterday: {count}")
+    keywords = load_config().get('keywords', []) # フィルタリングに使用するキーワード
+    filtered_papers = get_arxiv_papers(yesterday, keywords=keywords, max_result=count)
+    if test_mode:
+        filtered_papers = filtered_papers[:3]
+
+    # 各論文のidの取得
+    yesterday_arxiv_ids = apply_function_to_links(filtered_papers, arxiv_link_to_id)
+
+    # 前日に公開されたarxiv論文の埋め込み表現化と登録
+    arxiv_path = f"/app/data/embed_arxiv_{yesterday.year}-{yesterday.month}-{yesterday.day}.json"
+    print(f"File {arxiv_path} does not exist. Creating new data...")
+    arxiv_data = []
+    for i, data in enumerate(filtered_papers):
+        arxiv_data.append({
+            "text":{"title": data['title'], "summary": data['summary']}, 
+            "embedding":{"title": get_text_embedding(client, data["title"], model), "summary": get_text_embedding(client, data["title"], model)}, 
+            "id": yesterday_arxiv_ids[i]
+        })
+    save_to_json(arxiv_data, arxiv_path)
+    print(f"New data saved to {arxiv_path}")
+
+    if count != 0:
+        # 取得する論文の選定（top-N）
+        # 既存データベースと新規取得データとの類似度獲得
+        title_similarities = cosine_similarity(
+            [item["embedding"]["title"] for item in arxiv_data],
+            [item["embedding"]["title"] for item in knowledge_data]
+            )
+        title_distances = []
+        for sim in title_similarities:
+            title_distances.append(sum(sim) / len(sim))
+        distances = title_distances
+        # 上位いくつの論文を取得するか
+        sorted_indices = sorted(range(len(distances)), key=lambda i: distances[i], reverse=True)
+        # Notionに論文を記録する
+        if load_config().get('add_to_notion', True):
+            for idx in sorted_indices[:load_config().get('arxiv_to_notion', 1)]:
+                paper_to_notion = filtered_papers[idx]
+                arxiv2notion(paper_to_notion)
+        # Slackに論文を投稿する
+        for idx in sorted_indices[:load_config().get('slack_to_notion', 3)]:
+            paper_to_slack = filtered_papers[idx]
+            arxiv2slack(paper_to_slack, distances[idx])
+    else:
+        """
+        対象の日にarxivで公開された論文がなかったとき
+        金曜日と土曜日、及び祝日には公開されない
+        ref:https://info.arxiv.org/help/availability.html
+        """
+        post_to_slack(message="公開された論文はありません！", channel=load_config().get('slack_channel', None))
