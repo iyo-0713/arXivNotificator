@@ -1,6 +1,6 @@
 # arXivNotifier
 
-This project collects information from arXiv periodically and notifies it to Notion and Slack.
+本プロジェクトではslackから毎日情報を取得し、ユーザの好みに合わせた論文の推薦をSlackとNotionをUIとして行います
 
 ## Directory Structure
 
@@ -105,37 +105,12 @@ To run the project using Docker:
 
 ## License
 
+本プロジェクトでは
+
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Contact
 
-For any inquiries, please contact [your_email@example.com].
-```
-
-### 各セクションの説明
-
-1. **プロジェクトのタイトルと概要**
-   - プロジェクト名とその目的を簡潔に説明します。
-
-2. **ディレクトリ構造**
-   - プロジェクトのファイル構造を示します。これにより、ユーザーはどのファイルがどの機能に関連しているかを理解しやすくなります。
-
-3. **インストール方法**
-   - プロジェクトをクローンし、必要な依存関係をインストールする手順を示します。
-
-4. **使用方法**
-   - プロジェクトの実行方法を説明します。
-
-5. **環境変数の設定**
-   - プロジェクトで必要な環境変数の設定方法を示します。
-
-6. **ライセンス**
-   - プロジェクトのライセンス情報を記載します。
-
-7. **連絡先情報**
-   - 問い合わせ先の情報を提供します（オプション）。
-
-8. **貢献ガイドライン**
-   - プロジェクトへの貢献方法についてのガイドラインを提供します（オプション）。
-
-README.mdを作成することで、プロジェクトの利用者がインストールや使用方法を理解しやすくなります。何か他に質問があれば教えてください。
+何かありましたら以下のアドレスまでご連絡ください
+h.yasukawa.0713☆gmail.com
+（☆を@に変える）
