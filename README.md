@@ -26,7 +26,8 @@ arXivNotifier/
 
 ## Installation
 ### 1. **本リポジトリのClone：**
-    ```bash
+    ```
+    bash
     git clone https://github.com/iyo-0713/arXivNotificator.git
     cd arXivNotifier
     ```
