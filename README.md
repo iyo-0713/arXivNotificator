@@ -1,11 +1,14 @@
 # arXivNotifier
 
-本プロジェクトではslackから毎日情報を取得し、ユーザの好みに合わせた論文の推薦をSlackとNotionをUIとして行います。
+本プロジェクトではarXivから毎日情報を取得し、ユーザの好みに合わせた論文の推薦をSlackとNotionをUIとして行います。
+
+なお推薦は、arXivから取得した論文からOpenAI APIを用いて埋め込み表現を取得し、notionに記録された論文とどの程度類似しているかに準じています。
+
 詳細は以下のブログを参考にしてください。
 
 ## Directory Structure
 ```
-arXivNotifier/
+arXivNotificator/
 ├── data/
 │   ├── log/
 │   └── initial_data.json
@@ -21,81 +24,78 @@ arXivNotifier/
 ├── config.json
 ├── crontab
 ├── Dockerfile
+├── README.md
 └── requirements.txt
 ```
 
 ## Installation
-### 1. **本リポジトリのClone：**
-    ```
+### 1. **本リポジトリのClone:**
     bash
     git clone https://github.com/iyo-0713/arXivNotificator.git
     cd arXivNotifier
-    ```
-### 2. **.envファイルの作成：**
-    以下の環境変数を登録した'.env'ファイルをrootディレクトリに作成してください
+
+### 2. **.envファイルの作成:**
+以下の環境変数を登録した'.env'ファイルをrootディレクトリに作成してください
+
     SLACK_BOT_TOKEN==your_slack_bot_token
     NOTION_INTEGRATION_TOKEN=your_notion_api_token
     NOTION_DATABASE_ID=your_notion_database_id
     TEMPLATE_PAGE_ID=your_notion_template_id (optional)
     OPENAI_API_key=your_openai_api_token
 
-    **Environment Variables**
-    SLACK_BOT_TOKEN：通知を行うslack workspaceのUser OAuth token。slackへのメッセージ送信の認証に使われます
-    NOTION_INTEGRATION_TOKEN：結果を記録するNotionのインテグレーションのtoken。Notionのworkspaceへのアクセスの認証に使われます
-    NOTION_DATABASE_ID： 論文などの管理を行っているデータビューのID
-    TEMPLATE_PAGE_ID (optional)：論文の管理を行っているデータビューのテンプレートのID
-    OPENAI_API_KEY: OpenAIのAPIにアクセスするためAPI Key。OpenAIサービスとのやり取りのために使われます
-    The API key for accessing the OpenAI API. This is used to interact with OpenAI services.
+**Environment Variables**
+
+- SLACK_BOT_TOKEN：通知を行うslack workspaceのUser OAuth token。slackへのメッセージ送信の認証に使われます
+- NOTION_INTEGRATION_TOKEN：結果を記録するNotionのインテグレーションのtoken。Notionのworkspaceへのアクセスの認証に使われます
+- NOTION_DATABASE_ID： 論文などの管理を行っているデータビューのID
+- TEMPLATE_PAGE_ID (optional)：論文の管理を行っているデータビューのテンプレートのID
+- OPENAI_API_KEY: OpenAIのAPIにアクセスするためAPI Key。OpenAIサービスとのやり取りのために使われます
+
 
 ### 3. **config.jsonの設定:**
-    以下の要素を持つconfig.jsonを作成してください
-    keywords: List of keywords to filter arXiv papers. This should be a list of strings.
-    slack_channel: The Slack channel where paper notifications will be sent.
-    add_to_notion: Boolean flag to enable or disable adding notifications to Notion.
-    arxiv_to_notion: Number of arXiv papers to add to Notion.
-    arxiv_to_slack: Number of arXiv papers to send to Slack.
-    notion_title: The title field used in Notion entries.
-    notion_url: The URL field used in Notion entries.
-    initial_data_path: Path to the initial data file used by the application.
 
-### 4. **Build and run the Docker container:**
-    Build the Docker image:
-    ```bash
-    docker build -t arxivnotifier .
-    ```
-    Run the Docker container:
-    ```bash
-    docker run -d --name arxivnotifier arxivnotifier
-    ```
+以下の要素を持つconfig.jsonをご自身の目的に応じて編集してください
+- keywords：arXivから取得した論文のフィルタリングに用いるキーワード。登録されている場合、そのキーワードを**含まない**論文は弾かれます
+- slack_channel：通知を行うslackのチャンネル名
+- add_to_notion：True/False。Notionとの連携ができない場合はFalseにしてください
+- arxiv_to_notion：Notionに記録する論文の数
+- arxiv_to_slack：Arxivに通知する論文の数
+- notion_title：Notionのデータビューにおいて、論文のタイトルを入れる項目名
+- notion_url：Notionのデータビューにおいて、論文のリンクを入れる項目名
+- initial_data_path：Notionのデータベースがない場合に利用するjsonファイルのパス。既存のNotionデータベースがない場合に用いてください
 
-## API Usage
+### 4. **crontabの設定(optional):**
+
+推薦の定期実行はcronを用いて行っています。
+デフォルトでは7:30に通知する設定にしていますが、時間を変える場合は以下のcrontabファイルを編集してください
+
+    30 22 * * * /usr/local/bin/python3 /app/src/main.py >> /app/data/log/cron.log 2>&1
+
+
+### 5. **Dockerコンテナのbuildとrun:**
+
+Build the Docker image:
+
+    bash
+    docker build -t arxiv-notificator .
+
+Run the Docker container:
+
+    bash
+    docker run -d --name arxiv-notificator arxiv-notificator
+
+## API利用
+
 本プロジェクトでは以下のAPIを利用しています。
+本プロジェクトの利用の際には、各APIの利用規約を遵守してください
 
-# TODO APIのリンクを調べる
-
-OpenAI API
-[Slack API](https://api.slack.com/lang/ja-jp)
-[Notion API](https://developers.notion.com/)
-arXiv API
-
-Please ensure compliance with each API's usage policies and terms of service.
+- [arXiv API](https://info.arxiv.org/help/api/index.html)
+- [Slack API](https://api.slack.com/lang/ja-jp)
+- [Notion API](https://developers.notion.com/)
+- [OpenAI API](https://openai.com/index/openai-api/)
 
 ### Contact
 
 何かありましたら以下のアドレスまでご連絡ください
-h.yasukawa.0713☆gmail.com
-（☆を@に変える）
 
-
-
-
-
-
-
-
-
-
-
-何かありましたら以下のアドレスまでご連絡ください
-h.yasukawa.0713☆gmail.com
-（☆を@に変える）
+    h.yasukawa.0713☆gmail.com（☆を@に変える）
