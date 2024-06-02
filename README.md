@@ -64,8 +64,9 @@ Please ensure compliance with each API's usage policies and terms of service.
 
 ### Contact
 
-For any inquiries, please contact [your_email@example.com].
-
+何かありましたら以下のアドレスまでご連絡ください
+h.yasukawa.0713☆gmail.com
+（☆を@に変える）
 
 
 
