@@ -3,7 +3,7 @@
 本プロジェクトではslackから毎日情報を取得し、ユーザの好みに合わせた論文の推薦をSlackとNotionをUIとして行います
 
 ## Directory Structure
-
+```
 arXivNotifier/
 ├── data/
 │   ├── log/
@@ -21,10 +21,10 @@ arXivNotifier/
 ├── crontab
 ├── Dockerfile
 └── requirements.txt
-
 ```
 
 ## Installation
+```
 
 1. **Clone the repository:**
     ```bash
