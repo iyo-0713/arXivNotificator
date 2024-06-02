@@ -20,12 +20,12 @@
         "link": "https://arxiv.org/abs/2401.08406"
     },
     {
-        "title": "A Persona-Based Neural Conversation Model", 
-        "link": "https://doi.org/10.48550/arXiv.1603.06155"
-    },
-    {
         "title": "Fine-tuning Language Models for Factuality", 
         "link": "https://doi.org/10.48550/arXiv.2311.08401"
+    },
+    {
+        "title": "A Persona-Based Neural Conversation Model", 
+        "link": "https://doi.org/10.48550/arXiv.1603.06155"
     },
     {
         "title": "A Survey on Evaluation of Large Language Models", 
@@ -38,9 +38,5 @@
     {
         "title": "A Survey of Large Language Models", 
         "link": "https://doi.org/10.48550/arXiv.2303.18223"
-    },
-    {
-        "title": "Self-Rewarding Language Models", 
-        "link": "https://doi.org/10.48550/arXiv.2401.10020"
     }
 ]
