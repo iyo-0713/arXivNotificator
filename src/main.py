@@ -152,7 +152,7 @@ if __name__ == "__main__":
     # Knowledgeに基づく論文の推薦
 
     # 前日に公開されたarxiv論文の取得
-    yesterday = datetime.now() - timedelta(days=3)
+    yesterday = datetime.now() - timedelta(days=1)
     count = get_arxiv_paper_count(yesterday)
     print(f"Number of papers published yesterday: {count}")
     keywords = load_config().get('keywords', []) # フィルタリングに使用するキーワード
