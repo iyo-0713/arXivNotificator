@@ -72,16 +72,14 @@ arXivNotificator/
     30 22 * * * /usr/local/bin/python3 /app/src/main.py >> /app/data/log/cron.log 2>&1
 
 
-### 5. **Dockerコンテナのbuildとrun:**
+### 5. **Dockerコンテナのセットアップ:**
 
-Build the Docker image:
+Docker imageのbuild:
 
-    bash
     docker build -t arxiv-notificator .
 
-Run the Docker container:
+Docker containerのrun:
 
-    bash
     docker run -d --name arxiv-notificator arxiv-notificator
 
 ## API利用
@@ -94,7 +92,7 @@ Run the Docker container:
 - [Notion API](https://developers.notion.com/)
 - [OpenAI API](https://openai.com/index/openai-api/)
 
-### Contact
+## Contact
 
 何かありましたら以下のアドレスまでご連絡ください
 
