@@ -5,6 +5,7 @@
 なお推薦は、arXivから取得した論文からOpenAI APIを用いて埋め込み表現を取得し、notionに記録された論文とどの程度類似しているかに準じています。
 
 Notionとの具体的な連携の仕方などは以下のブログを参考にしてください。
+https://zenn.dev/iyo/articles/dd1151d3c9d129
 
 ## Directory Structure
 ```
